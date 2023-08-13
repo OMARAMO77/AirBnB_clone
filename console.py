@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/python3
 """---"""
 import cmd
 import json
@@ -14,6 +14,7 @@ import models
 from os import path
 from datetime import datetime
 import shlex
+import ast
 
 
 class HBNBCommand(cmd.Cmd):
@@ -106,11 +107,11 @@ class HBNBCommand(cmd.Cmd):
         else:
             print([str(v) for v in all_objects.values()])
 
-    def do_update(self, line):
+    def do_update(self, arg):
         """Updates an instance based on the class name and id
         by adding or updating attribute.
         """
-        args = shlex.split(line)
+        args = shlex.split(arg)
         args_size = len(args)
         if args_size == 0:
             print('** class name missing **')
@@ -131,6 +132,60 @@ class HBNBCommand(cmd.Cmd):
                 setattr(inst_data, args[2], args[3])
                 setattr(inst_data, 'updated_at', datetime.now())
                 models.storage.save()
+
+    def do_count(self, arg):
+        """Retrieve the number of instances of a class"""
+        args = arg.split()
+        if not args:
+            print("** class name missing **")
+            return
+        elif args[0] not in self.valid_classes:
+            print("** class doesn't exist **")
+            return
+
+        all_objects = FileStorage().all()
+        class_instances = []
+        for obj in all_objects.values():
+            if obj.__class__.__name__ == args[0]:
+                class_instances.append(obj)
+        print(len(class_instances))
+
+    def default(self, line):
+        """
+        Handle class name followed by .all(), .count(),
+        .show(), .destroy(), or .update()
+        """
+        parts = line.split('.')
+        if len(parts) == 2:
+            if parts[0] in self.valid_classes:
+                if parts[1] == "all()":
+                    self.do_all(parts[0])
+                elif parts[1] == "count()":
+                    self.do_count(parts[0])
+                elif parts[1].startswith("show(") and parts[1].endswith(")"):
+                    id_str = parts[1][6:-2]
+                    self.do_show(parts[0] + " " + id_str)
+                elif parts[1].startswith("destroy(") and \
+                        parts[1].endswith(")"):
+                    id_str = parts[1][9:-2]
+                    self.do_destroy(parts[0] + " " + id_str)
+                elif parts[1].startswith("update(") and parts[1].endswith(")"):
+                    if "{" in parts[1]:
+                        args = parts[1][7:-1].split(', ',1)
+                        dict_repr = args[1].replace("'", "\"")
+                        dict_repr = ast.literal_eval(dict_repr)
+                        if type(dict_repr) == dict:
+                            for key, value in dict_repr.items():
+                                self.do_update(parts[0] + " " + args[0] + " " +
+                                               str(key) + " " + str(value))
+                    else:
+                        args = parts[1][7:-1].split(', ')
+                        if len(args) == 3:
+                            self.do_update(parts[0] + " " + args[0] + " " +
+                                           args[1] + " " + args[2])
+                return
+
+        cmd.Cmd.default(self, line)
 
 
 if __name__ == '__main__':
