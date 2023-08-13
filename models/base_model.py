@@ -1,49 +1,51 @@
 #!/usr/bin/python3
-""" This will create the base code for the Airbnb clone """
-import uuid
+''' module for BaseModel class '''
 from datetime import datetime
-import json
+import uuid
+import models
 
 
 class BaseModel:
-    """ The base of all other model """
+    ''' BaseModel class '''
+    def __init__(self, *args, **kwargs):
+        '''
+        initation of basemodel
 
-    def __init__(self, id, created_at, updated_at):
-        """
-        id is generated woth the uuid random unique
-        value generatir and it is converted to a string
-        created_at is the date of creation.
-        updated_at is the date of each modification.
-        """
-        random_id = uuid.uuid4()
-        id = str(random_id)
-        self.id = id
-        created_at = datetime.now()
-        self.created_at = created_at
-        self.updated_at = created_at
+        Args:
+        *args: arguments passed in
+        **kwargs: arguments with key values
+
+        '''
+        if len(kwargs) != 0:
+            self.__dict__ = kwargs
+            self.created_at = datetime.strptime(self.created_at,
+                                                "%Y-%m-%dT%H:%M:%S.%f")
+            self.updated_at = datetime.strptime(self.updated_at,
+                                                "%Y-%m-%dT%H:%M:%S.%f")
+        else:
+            self.id = str(uuid.uuid4())
+            self.created_at = datetime.now()
+            self.updated_at = datetime.now()
+            models.storage.new(self)
 
     def __str__(self):
-        """
-        this will print out the string of
-        [<class name>] (<self.id>) <self.__dict__>
-        """
-        print(f'[{self.__class__.__name__}] ({self.id}) {self.__dict__}')
+        '''
+        Return:
+        string represntation fo object
+        '''
+        return '[{}] ({}) {}'.format(self.__class__.__name__,
+                                     self.id, self.__dict__)
 
     def save(self):
-        """
-        this will update the datetime when an instance is saved
-        """
+        ''' updates date for updated_at attribute '''
         self.updated_at = datetime.now()
+        models.storage.save()
 
     def to_dict(self):
-        """
-        This will change the inputted words inti dictionary
-        """
-        self.__class__ = self.__class__.__name__
-        self.created_at = created_at.isoformat()
-        self.updated_at = updated_at.isoformat()
-        obj_string = f'{ "name":{self.__class__}, "id":{self.id}, \
-                "created_at":{self.created_at}, \
-                "updated_at":{self.updated_at}}'
-        self.__dict__ = json.loads(obj_string)
-        return self.__dict__
+        ''' returns dictonary with all key values of instance '''
+        mydict = self.__dict__.copy()
+        mydict['__class__'] = self.__class__.__name__
+        mydict['created_at'] = self.created_at.isoformat()
+        mydict['updated_at'] = self.updated_at.isoformat()
+
+        return mydict
