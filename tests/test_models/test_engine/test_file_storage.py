@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """---"""
 import unittest
 import json
@@ -10,6 +11,7 @@ from models.amenity import Amenity
 from models.place import Place
 from models.review import Review
 from models.engine.file_storage import FileStorage
+
 
 class TestFileStorage(unittest.TestCase):
     """---"""
@@ -36,7 +38,8 @@ class TestFileStorage(unittest.TestCase):
         self.review_model.id = "test_review_id"
 
         self.models = [self.base_model, self.user_model, self.state_model,
-                       self.city_model, self.amenity_model, self.place_model, self.review_model]
+                       self.city_model, self.amenity_model,
+                       self.place_model, self.review_model]
 
         self.storage._FileStorage__objects = {
             "BaseModel.test_base_id": self.base_model,
@@ -82,6 +85,7 @@ class TestFileStorage(unittest.TestCase):
             self.assertIn(key, objects)
             self.assertIsInstance(objects[key], model.__class__)
             self.assertEqual(objects[key].to_dict(), model.to_dict())
+
 
 if __name__ == '__main__':
     unittest.main()
